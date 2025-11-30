@@ -1,0 +1,9 @@
+#Archivos temporales
+*.log
+*.tmp
+*.swp
+
+#Sistema Operativo
+.DS_Store
+Thumbs.db
+
