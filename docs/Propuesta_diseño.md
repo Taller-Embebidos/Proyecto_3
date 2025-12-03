@@ -113,16 +113,17 @@ Sistema de Detección de Rayos
 └── Telemetría
 ├── WiFi/MQTT
 └── Registro interno
-![Diagrama 2](imagenes/proyecto32.png)
-
-
+<p align="center">
+  <img src="./imagenes/proyecto32.png" width="600">
+</p>
 
 ## 6. Arquitectura del Sistema Propuesto
 ### 6.1 Diagrama General
 Pararrayo -----|| Inductor Pasivo ||-----[ R ]-----[ Diodo ]----[ RC ]----[ TVS ]---- GPIO/ADC ESP32
 ↑
-
-![Diagrama 1](imagenes/proyecto31.png)
+<p align="center">
+  <img src="./imagenes/proyecto31.png" width="600">
+</p>
 
 ### Arquitectura Funcional Completa
 ### 6.2 Componentes
