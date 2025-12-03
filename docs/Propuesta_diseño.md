@@ -175,10 +175,10 @@ Campo EM inducido
 ## 9. Planificación
 | Fase         | Actividades                          | Duración |
 |--------------|--------------------------------------|----------|
-| Diseño       | Sensor, circuito, arquitectura       | 10 días  |
-| Desarrollo   | Firmware, filtro, ADC                | 20 días  |
-| Pruebas      | Inducción, ruido, calibración        | 14 días  |
-| Documentación| Manual, reporte                      | 10 días  |
+| Diseño       | Sensor, circuito, arquitectura       | 2 días  |
+| Desarrollo   | Firmware, filtro, ADC                | 2 días  |
+| Pruebas      | Inducción, ruido, calibración        | 2 días  |
+| Documentación| Manual, reporte                      | 1 días  |
 
 ## 10. Conclusiones
 1.  El sistema permite detección pasiva sin intervención en el pararrayo.
