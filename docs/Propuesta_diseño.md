@@ -169,10 +169,6 @@ Pararrayo -----|| Inductor Pasivo ||-----[ R ]-----[ Diodo ]----[ RC ]----[ TVS 
 *   WiFi
 *   MQTT o HTTP
 
-**Fase 5: Validación en sitio**
-*   pruebas reales en estructura metálica sin pararrayo
-*   pruebas en pararrayo real
-
 ## 9. Planificación
 | Fase         | Actividades                          | Duración |
 |--------------|--------------------------------------|----------|
