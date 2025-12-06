@@ -8,6 +8,7 @@
 
 
 ## Tabla de contenidos
+* [🎯Objetivos General](#objetivo-general)
 * [🎯Objetivos Específicos](#objetivos-específicos)
 * [📂Estructura del repositorio](#estructura-del-repositorio)                                 
 * [📂Repositorio](#repositorio)
