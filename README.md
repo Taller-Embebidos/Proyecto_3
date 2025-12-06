@@ -45,6 +45,17 @@ sistemas operativos de tiempo real.
 - .gitignore → Archivo para ignorar archivos temporales y del sistema
 
 ---
+# Proyecto de Sistemas Embebidos
+
+## 📂Repositorio
+
+- [Código fuente](src/)
+- [Documentación](docs/)
+- [Imágenes](imagenes/)
+
+## 🖼 Imagen principal
+![Diagrama general](imagenes/diagrama.png)
+
 
 ## Cómo usar este template
 
