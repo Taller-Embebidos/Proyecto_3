@@ -1,15 +1,46 @@
-# Template Universitario - Mi Primer Repo
+# - Readme !!!
+<p align="center">
+  <img src="imagenes/LogoTec.png" width="500" alt="Logo TEC">
+</p>
 
-Este repositorio sirve como **punto de partida para proyectos universitarios**.  
-Los estudiantes pueden clonar este repo y usarlo como base para sus propios repositorios.
+
+## - Tercer Proyecto : Sistemas Embebidos para aplicaciones de Tiempo Real
+
+
+## Tabla de contenidos
+* [🎯Objetivos Específicos](#objetivos-específicos)
+* [📂Estructura del repositorio](#estructura-del-repositorio)                                 
+* [📂Repositorio](#repositorio)
+* [🕒📆Horario de Reuniones](#horario-de-reuniones)
+* [👥Roles](#roles)
+* [📷Crear Imagen Raspberry Pi 4](#crear-imagen-raspberry-pi-4)
+* [Usar este repo como template en GitHub](#usar-este-repo-como-template-en-github)
+* [Buenas prácticas](#buenas-prácticas)
 
 ---
+## Objetivo general
 
-## Estructura del repositorio
+• Desarrollar una aplicación con sistemas embebidos que resuelva un problema de calidad
+de vida de un segmento de población costarricense, utilizando herramientas de desarrollo
+con sistemas operativos de tiempo real embebidos.
+
+## Objetivos Específicos
+
+• Identificar una aplicación de sistemas de embebidos que represente un problema de
+calidad de vida para un segmento de la población costarricense.
+
+• Desarrollar una arquitectura física de hardware y software que funcione como solución al
+problema embebido propuesto.
+
+• Implementar las arquitecturas de hardware y software propuestas usando para ello los
+flujos de trabajo desarrollados en el curso para la síntesis de software embebido con
+sistemas operativos de tiempo real.
+
+## 📂Estructura del repositorio 
 
 - /src/ → Carpeta para código o mini-proyectos
 - /docs/ → Carpeta para notas y documentación
-- /imagenes/ → Carpeta para recursos visuales (imágenes)
+- /imagenes/ → Carpeta para recursos visuales (#imágenes)
 - .gitignore → Archivo para ignorar archivos temporales y del sistema
 
 ---
@@ -56,5 +87,4 @@ git push origin mi-rama
 - Actualizar el README si agregas secciones importantes a tu proyecto
 
 ---
-
-Creado por Kendy Arias, para el mini taller #1 de Sistemas Embebidos, IIS 2025.
+Creado  Proyecto 3 Grupo 2 Carlos Elizondo, Rodrigo Venegas, Manuel Garita de Sistemas Embebidos, IIS 2025.
