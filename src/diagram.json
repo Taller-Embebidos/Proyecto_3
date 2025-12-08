@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "author": "rayos-esp32",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0
+    },
+    {
+      "type": "wokwi-breadboard",
+      "id": "bb1",
+      "top": 180,
+      "left": -40
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btnRay",
+      "top": 170,
+      "left": 20,
+      "attrs": { "color": "red", "bounce": "0" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+
+    [ "esp:4", "btnRay:1", "green", [] ],
+    [ "btnRay:2", "bb1:GND.1", "black", [] ],
+    [ "bb1:GND.1", "esp:GND", "black", [] ]
+  ],
+  "dependencies": {}
+}
