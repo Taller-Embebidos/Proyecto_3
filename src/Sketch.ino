@@ -4,7 +4,7 @@
   - GPIO 4 recibe un pulso por cada rayo (botón en protoboard).
   - Interrupción + antirrebote.
   - Fecha y hora reales vía NTP (GMT-6) cuando hay WiFi.
-  - Guarda SIEMPRE en NVS (memoria interna) el contador y último epoch.
+  - Guarda SIEMPRE en NVS el contador y último epoch.
   - Si hay conexión MQTT -> envía a ThingsBoard.
   - Si NO hay conexión -> sigue contando y guardando localmente.
 */
@@ -22,15 +22,15 @@
 // ================================
 // WIFI (Simulación Wokwi o lo que tengas)
 // ================================
-const char* WIFI_SSID = "Wokwi-GUEST";  // Puedes cambiarlo luego
-const char* WIFI_PASS = "";             // Vacío en Wokwi
+const char* WIFI_SSID = "Wokwi-GUEST";  // En Wokwi
+const char* WIFI_PASS = "";             // Sin contraseña
 
 // ================================
-// MQTT THINGSBOARD  (Rellena estos)
+// MQTT THINGSBOARD CLOUD (North America)
 // ================================
-const char* TB_BROKER = "AQUI_SERVIDOR_THINGSBOARD";   // ej: "thingsboard.cloud"
-const int   TB_PORT   = AQUI_PUERTO;                   // ej: 1883
-const char* TB_TOKEN  = "AQUI_ACCESS_TOKEN";           // Access Token del dispositivo
+const char* TB_BROKER = "mqtt.thingsboard.cloud";   // Host de tu captura
+const int   TB_PORT   = 1883;                       // Puerto de tu captura
+const char* TB_TOKEN  = "z77bybvtklxwszwmnl1d";     // TU Access Token
 
 // ================================
 
@@ -158,7 +158,6 @@ void publishStrike(uint32_t id, unsigned long epoch) {
   if (timeReady && epoch > 1000) {
     localtime_r((time_t*)&epoch, &ts);
   } else {
-    // Si no hay tiempo real, llenar con 0
     memset(&ts, 0, sizeof(ts));
   }
 
@@ -175,9 +174,8 @@ void publishStrike(uint32_t id, unsigned long epoch) {
 
   char payload[250];
   snprintf(payload, sizeof(payload),
-    "{\"rayo_id\": %u, \"epoch\": %lu, \"fecha\": \"%s\", \"hora\": \"%s\", \"gpio\": 4}",
-    id, epoch, fecha, hora
-  );
+           "{\"rayo_id\": %u, \"epoch\": %lu, \"fecha\": \"%s\", \"hora\": \"%s\", \"gpio\": 4}",
+           id, epoch, fecha, hora);
 
   mqtt.publish("v1/devices/me/telemetry", payload);
 
@@ -218,7 +216,6 @@ void setup() {
 // LOOP PRINCIPAL
 // ================================
 void loop() {
-  // Mantener MQTT si está conectado
   if (mqtt.connected()) {
     mqtt.loop();
   }
@@ -252,8 +249,7 @@ void loop() {
     if (timeReady) {
       lastStrikeEpoch = time(NULL);
     } else {
-      // Si no hay NTP aún, guardamos 0 o podrías usar millis() si quieres
-      lastStrikeEpoch = 0;
+      lastStrikeEpoch = 0; // sin hora real
     }
 
     // Guardado SIEMPRE en memoria interna
