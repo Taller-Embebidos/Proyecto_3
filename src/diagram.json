@@ -7,29 +7,22 @@
       "type": "board-esp32-devkit-c-v4",
       "id": "esp",
       "top": 0,
-      "left": 0
-    },
-    {
-      "type": "wokwi-breadboard",
-      "id": "bb1",
-      "top": 180,
-      "left": -40
+      "left": 0,
+      "attrs": {}
     },
     {
       "type": "wokwi-pushbutton",
-      "id": "btnRay",
-      "top": 170,
-      "left": 20,
-      "attrs": { "color": "red", "bounce": "0" }
+      "id": "btnRayPCB",
+      "top": 120,
+      "left": 200,
+      "attrs": { "color": "blue", "bounce": "0" }
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-
-    [ "esp:4", "btnRay:1", "green", [] ],
-    [ "btnRay:2", "bb1:GND.1", "black", [] ],
-    [ "bb1:GND.1", "esp:GND", "black", [] ]
+    [ "esp:4", "btnRayPCB:1", "green", [] ],
+    [ "btnRayPCB:2", "esp:GND", "black", [] ]
   ],
   "dependencies": {}
 }
