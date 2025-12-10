@@ -1,64 +1,56 @@
-/*
-  Contador de Rayos con ESP32 + ThingsBoard (MQTT) + Modo Offline
-  ----------------------------------------------------------------
-  - GPIO 4 recibe un pulso por cada rayo (botón en protoboard).
-  - Interrupción + antirrebote.
-  - Fecha y hora reales vía NTP (GMT-6) cuando hay WiFi.
-  - Guarda SIEMPRE en NVS el contador y último epoch.
-  - Si hay conexión MQTT -> envía a ThingsBoard.
-  - Si NO hay conexión -> sigue contando y guardando localmente.
-*/
 
 #include <Preferences.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <time.h>
 
-#define PIN_RAYO 4
+#define PIN_RAYO    4
 #define DEBOUNCE_MS 120
-#define TZ_OFFSET  (-6 * 3600)   // GMT-6
+#define TZ_OFFSET   (-6 * 3600)   // GMT-6
 #define TZ_DST      0
 
 // ================================
-// WIFI (Simulación Wokwi o lo que tengas)
+// WiFi (Wokwi)
 // ================================
-const char* WIFI_SSID = "Wokwi-GUEST";  // En Wokwi
-const char* WIFI_PASS = "";             // Sin contraseña
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
 
 // ================================
-// MQTT THINGSBOARD CLOUD (North America)
+// MQTT ThingsBoard Cloud
 // ================================
-const char* TB_BROKER = "mqtt.thingsboard.cloud";   // Host de tu captura
-const int   TB_PORT   = 1883;                       // Puerto de tu captura
-const char* TB_TOKEN  = "z77bybvtklxwszwmnl1d";     // TU Access Token
+const char* TB_BROKER = "mqtt.thingsboard.cloud";
+const int   TB_PORT   = 1883;
+const char* TB_TOKEN  = "z77bybvtklxwszwmnl1d";
 
 // ================================
+// ID del dispositivo (fijo para demo)
+// ================================
+const uint32_t DEVICE_ID = 1;
 
 WiFiClient espClient;
 PubSubClient mqtt(espClient);
 Preferences prefs;
 
-// Flags de estado
 bool wifiReady = false;
 bool timeReady = false;
 
-// Tiempos de reintento
 unsigned long lastWifiAttempt = 0;
 unsigned long lastMqttAttempt = 0;
-const unsigned long WIFI_RETRY_MS = 10000;  // 10 s
-const unsigned long MQTT_RETRY_MS = 10000;  // 10 s
+const unsigned long WIFI_RETRY_MS = 10000;
+const unsigned long MQTT_RETRY_MS = 10000;
 
-// Variables compartidas con la ISR
+// ISR vars
 volatile unsigned long lastStrikeMsISR = 0;
 volatile uint32_t strikeCountISR = 0;
 volatile bool strikePending = false;
 
-// Variables normales
-uint32_t strikeCount = 0;
+// Global counters
+uint32_t strikeCount = 0;       // contador sesión (opcional para debug)
+uint32_t totalRays   = 0;       // acumulado de rayos (persistente)
 unsigned long lastStrikeEpoch = 0;
 
 // ================================
-// INTERRUPCIÓN EN GPIO4
+// ISR GPIO4
 // ================================
 void IRAM_ATTR onStrikeISR() {
   unsigned long now = millis();
@@ -70,7 +62,7 @@ void IRAM_ATTR onStrikeISR() {
 }
 
 // ================================
-// WIFI – CONEXIÓN NO BLOQUEANTE
+// WiFi
 // ================================
 void connectWiFiOnce() {
   if (WiFi.status() == WL_CONNECTED) {
@@ -82,7 +74,7 @@ void connectWiFiOnce() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   unsigned long start = millis();
-  while (millis() - start < 5000) {  // Máx 5 s
+  while (millis() - start < 5000) {
     if (WiFi.status() == WL_CONNECTED) {
       wifiReady = true;
       Serial.println("WiFi conectado.");
@@ -90,29 +82,27 @@ void connectWiFiOnce() {
       Serial.println(WiFi.localIP());
       return;
     }
-    delay(300);
     Serial.print(".");
+    delay(300);
   }
 
-  Serial.println("\nNo se pudo conectar WiFi (timeout). Modo offline.");
+  Serial.println("\nNo se pudo conectar WiFi.");
   wifiReady = false;
 }
 
 // ================================
-// NTP – INICIALIZACIÓN (sólo si hay WiFi)
+// NTP
 // ================================
 void initNTPOnce() {
-  if (!wifiReady) {
-    timeReady = false;
-    return;
-  }
+  if (!wifiReady) return;
 
   Serial.println("Sincronizando NTP...");
   configTime(TZ_OFFSET, TZ_DST, "pool.ntp.org", "time.nist.gov");
 
   struct tm info;
   unsigned long start = millis();
-  while (millis() - start < 5000) { // Máx 5 s
+
+  while (millis() - start < 5000) {
     if (getLocalTime(&info)) {
       Serial.println("NTP OK.");
       timeReady = true;
@@ -122,17 +112,15 @@ void initNTPOnce() {
     delay(300);
   }
 
-  Serial.println("\nNo se pudo sincronizar NTP. Continuando sin hora real.");
+  Serial.println("\nFallo NTP.");
   timeReady = false;
 }
 
 // ================================
-// MQTT – CONEXIÓN (no bloquear si falla)
+// MQTT
 // ================================
 void connectMQTTOnce() {
-  if (!wifiReady) {
-    return;
-  }
+  if (!wifiReady) return;
 
   mqtt.setServer(TB_BROKER, TB_PORT);
 
@@ -146,36 +134,48 @@ void connectMQTTOnce() {
 }
 
 // ================================
-// PUBLICAR UN RAYO EN THINGSBOARD
+// PUBLICAR EVENTO EN THINGSBOARD
 // ================================
-void publishStrike(uint32_t id, unsigned long epoch) {
+//  strikeId        -> id_rayo (ID único del rayo)
+//  deviceId        -> disp_id
+//  acumuladoRayos  -> acumulado_rayos
+//  epoch           -> unix epoch del evento
+void publishStrike(uint32_t strikeId,
+                   uint32_t deviceId,
+                   uint32_t acumuladoRayos,
+                   unsigned long epoch) {
+
   if (!mqtt.connected()) {
-    Serial.println("MQTT no conectado. No se publica, solo guardado local.");
+    Serial.println("MQTT no conectado. No se publica.");
     return;
   }
 
+  // Fecha y hora formateadas
   struct tm ts;
-  if (timeReady && epoch > 1000) {
-    localtime_r((time_t*)&epoch, &ts);
-  } else {
-    memset(&ts, 0, sizeof(ts));
-  }
-
   char fecha[16];
   char hora[16];
 
   if (timeReady && epoch > 1000) {
+    localtime_r((time_t*)&epoch, &ts);
     strftime(fecha, sizeof(fecha), "%Y-%m-%d", &ts);
     strftime(hora, sizeof(hora), "%H:%M:%S", &ts);
   } else {
-    strncpy(fecha, "1970-01-01", sizeof(fecha));
-    strncpy(hora, "00:00:00", sizeof(hora));
+    strcpy(fecha, "1970-01-01");
+    strcpy(hora,  "00:00:00");
   }
 
-  char payload[250];
+  // Construir JSON SOLO con los campos solicitados
+  char payload[256];
   snprintf(payload, sizeof(payload),
-           "{\"rayo_id\": %u, \"epoch\": %lu, \"fecha\": \"%s\", \"hora\": \"%s\", \"gpio\": 4}",
-           id, epoch, fecha, hora);
+           "{"
+             "\"id_rayo\": %u, "
+             "\"disp_id\": %u, "
+             "\"acumulado_rayos\": %u, "
+             "\"epoch\": %lu, "
+             "\"fecha\": \"%s\", "
+             "\"hora\": \"%s\""
+           "}",
+           strikeId, deviceId, acumuladoRayos, epoch, fecha, hora);
 
   mqtt.publish("v1/devices/me/telemetry", payload);
 
@@ -190,21 +190,24 @@ void setup() {
   Serial.begin(115200);
   delay(800);
 
-  Serial.println("\n=== ESP32 DETECTOR DE RAYOS (Offline + MQTT) ===");
+  Serial.println("\n=== ESP32 DETECTOR DE RAYOS ===");
 
   pinMode(PIN_RAYO, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_RAYO), onStrikeISR, FALLING);
 
   prefs.begin("rayos", false);
 
-  strikeCount = prefs.getUInt("count", 0);
+  // Recuperar valores persistentes
+  strikeCount     = prefs.getUInt("count", 0);
+  totalRays       = prefs.getUInt("total", 0);   // acumulado persistente
   lastStrikeEpoch = prefs.getULong("last", 0);
-  strikeCountISR = strikeCount;
+  strikeCountISR  = strikeCount;
 
-  Serial.print("Rayos previos almacenados: ");
+  Serial.print("Rayos previos (sesión): ");
   Serial.println(strikeCount);
+  Serial.print("Acumulado de rayos (acumulado_rayos): ");
+  Serial.println(totalRays);
 
-  // Primer intento de WiFi / NTP / MQTT (no bloquea infinito)
   connectWiFiOnce();
   if (wifiReady) {
     initNTPOnce();
@@ -213,61 +216,64 @@ void setup() {
 }
 
 // ================================
-// LOOP PRINCIPAL
+// LOOP
 // ================================
 void loop() {
-  if (mqtt.connected()) {
-    mqtt.loop();
-  }
+  if (mqtt.connected()) mqtt.loop();
 
   unsigned long now = millis();
 
-  // Reintentar WiFi cada cierto tiempo si no está conectado
+  // Retry WiFi
   if (!wifiReady && (now - lastWifiAttempt >= WIFI_RETRY_MS)) {
     lastWifiAttempt = now;
     connectWiFiOnce();
-    if (wifiReady && !timeReady) {
+    if (wifiReady && !timeReady)
       initNTPOnce();
-    }
   }
 
-  // Reintentar MQTT si hay WiFi pero no MQTT
+  // Retry MQTT
   if (wifiReady && !mqtt.connected() && (now - lastMqttAttempt >= MQTT_RETRY_MS)) {
     lastMqttAttempt = now;
     connectMQTTOnce();
   }
 
-  // Procesar rayos detectados
+  // Evento detectado
   if (strikePending) {
     noInterrupts();
     uint32_t c = strikeCountISR;
     strikePending = false;
     interrupts();
 
-    strikeCount = c;
+    strikeCount = c;      // sigue existiendo para depuración local
+    totalRays++;          // acumulado persistente
+    uint32_t strikeId = totalRays;  // ID único del rayo
 
-    if (timeReady) {
+    if (timeReady)
       lastStrikeEpoch = time(NULL);
-    } else {
-      lastStrikeEpoch = 0; // sin hora real
-    }
+    else
+      lastStrikeEpoch = 0;
 
-    // Guardado SIEMPRE en memoria interna
+    // Guardar en NVS
     prefs.putUInt("count", strikeCount);
+    prefs.putUInt("total", totalRays);
     prefs.putULong("last", lastStrikeEpoch);
 
-    // Intentar publicar (solo si hay MQTT)
-    publishStrike(strikeCount, lastStrikeEpoch);
+    // Publicar solo con los campos solicitados
+    publishStrike(
+      strikeId,
+      DEVICE_ID,
+      totalRays,        // acumulado_rayos
+      lastStrikeEpoch
+    );
 
     Serial.println("------------------------------");
-    Serial.print("Rayo detectado #");
-    Serial.println(strikeCount);
-    Serial.print("Epoch almacenado: ");
-    Serial.println(lastStrikeEpoch);
-    Serial.print("WiFi: ");
-    Serial.println(wifiReady ? "OK" : "NO");
-    Serial.print("MQTT: ");
-    Serial.println(mqtt.connected() ? "OK" : "NO");
+    Serial.printf("Rayo detectado (contador sesión): %u\n", strikeCount);
+    Serial.printf("ID único rayo (id_rayo): %u\n", strikeId);
+    Serial.printf("Acumulado de rayos (acumulado_rayos): %u\n", totalRays);
+    Serial.printf("Epoch: %lu\n", lastStrikeEpoch);
+    Serial.printf("WiFi: %s\n", wifiReady ? "OK" : "NO");
+    Serial.printf("MQTT: %s\n", mqtt.connected() ? "OK" : "NO");
+    Serial.printf("ID dispositivo (disp_id): %u\n", DEVICE_ID);
     Serial.println("------------------------------");
   }
 
