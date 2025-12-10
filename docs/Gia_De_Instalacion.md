@@ -4,8 +4,8 @@
 
 Este documento describe el procedimiento completo para:
 
-1. Instalar el entorno de desarrollo **ESP-IDF** en Linux.  
-2. Crear un proyecto basado en **FreeRTOS para ESP32**.  
+1. Instalar el entorno de desarrollo **ESP-IDF** en Linux dentro de la carpeta **proyectoESP**.  
+2. Crear un proyecto basado en **FreeRTOS para ESP32** dentro de esa misma carpeta.  
 3. Integrar el código del detector de rayos (GPIO + ISR + WiFi + NTP + MQTT + NVS).  
 4. Generar la **imagen de firmware** (`.bin`) del proyecto.  
 5. Flashear dicha imagen en un **ESP32-DevKitC-V4**.
@@ -32,11 +32,11 @@ El resultado será un firmware completamente funcional, basado en FreeRTOS, con 
 
 ## 3. Instalar ESP-IDF
 
-1. Crear carpeta de trabajo:
+1. Crear la carpeta de trabajo principal **proyectoESP**:
 
 ```bash
-mkdir -p ~/esp
-cd ~/esp
+mkdir -p ~/proyectoESP
+cd ~/proyectoESP
 ```
 
 2. Clonar ESP-IDF:
@@ -67,7 +67,7 @@ Esto agrega todas las herramientas (compiladores, cmake, python env) al entorno.
 Ejecutar:
 
 ```bash
-cd ~
+cd ~/proyectoESP
 mkdir -p proyectos_esp32
 cd proyectos_esp32
 
@@ -131,7 +131,17 @@ El token de ThingsBoard se usa como **username** en la conexión MQTT.
 
 ### 7.1 Establecer el target ESP32
 
+Antes de compilar activar ESP-IDF desde:
+
 ```bash
+cd ~/proyectoESP/esp-idf
+source ./export.sh
+```
+
+Luego:
+
+```bash
+cd ~/proyectoESP/proyectos_esp32/rayos_esp32
 idf.py set-target esp32
 ```
 
@@ -192,13 +202,17 @@ Atajos:
 ## 9. Estructura Final del Proyecto
 
 ```
-rayos_esp32/
-│── CMakeLists.txt
-│── sdkconfig
-│── build/                     ← Imagen del firmware
-└── main/
-    ├── CMakeLists.txt
-    └── main.c                 ← Código fuente del proyecto
+~/proyectoESP/
+│── esp-idf/
+│
+└── proyectos_esp32/
+    └── rayos_esp32/
+        │── CMakeLists.txt
+        │── sdkconfig
+        │── build/                     ← Imagen del firmware
+        └── main/
+            ├── CMakeLists.txt
+            └── main.c                 ← Código fuente del proyecto
 ```
 
 ---
