@@ -28,6 +28,11 @@ El resultado será un firmware completamente funcional, basado en FreeRTOS, con 
 - Toolchain ESP-IDF (se instala más adelante)  
 - Editor (VS Code, nano, vim)
 
+Dependencias mínimas necesarias
+
+```bash
+sudo dnf install cmake ninja-build python3 python3-pip git wget flex bison gperf
+```
 ---
 
 ## 3. Instalar ESP-IDF
