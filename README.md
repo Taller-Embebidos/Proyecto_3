@@ -14,8 +14,6 @@
 * [📂Repositorio](#repositorio)
 * [🕒📆Horario de Reuniones](#horario-de-reuniones)
 * [👥Roles](#roles)
-* [📷Crear Imagen Raspberry Pi 4](#crear-imagen-raspberry-pi-4)
-* [Usar este repo como template en GitHub](#usar-este-repo-como-template-en-github)
 * [Buenas prácticas](#buenas-prácticas)
 
 ---
